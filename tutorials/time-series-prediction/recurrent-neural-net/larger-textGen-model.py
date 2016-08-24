@@ -1,5 +1,3 @@
-# Load LSTM network and generate text
-import sys
 import numpy 
 from keras.models import Sequential
 from keras.layers import Dense
@@ -47,34 +45,20 @@ y = np_utils.to_categorical(dataY)
 
 # define the LSTM model
 model = Sequential()
-model.add(LSTM(256, input_shape=(X.shape[1], X.shape[2])))
+model.add(LSTM(256, input_shape=(X.shape[1], X.shape[2]), return_sequences=True))
+model.add(Dropout(0.2))
+model.add(LSTM(256))
 model.add(Dropout(0.2))
 model.add(Dense(y.shape[1], activation='softmax'))
 model.compile(loss='categorical_crossentropy', optimizer='adam')
 
-# load the network weights
-filename = "checkpoint/weights-improvement-19-1.9383.hdf5"
-model.load_weights(filename)
-model.compile(loss='categorical_crossentropy', optimizer='adam')
+# There is no test dataset. We are modeling the entire training dataset to learn the probability of each character in a sequence.
+# We are interested in a generalization of the dataset that minimizes the chosen loss function
+# We are seeking a balance between generalization of the dataset and overfitting but short of memorization
 
-int_to_char = dict((i,c) for i,c in enumerate(chars))
+# define the check point
+filepath="checkpoint/weights-improvement-{epoch:02d}-{loss:.4f}-bigger.hdf5"
+checkpoint = ModelCheckpoint(filepath, monitor='loss', verbose=1, save_best_only=True, mode='min')
+callbacks_list = [checkpoint]
 
-# pick a random seed
-start = numpy.random.randint(0,len(dataX)-1)
-pattern = dataX[start]
-print 'Seed: '
-print "\"", ''.join([int_to_char[value] for value in pattern]), "\""
-
-# generate characters
-for i in range(1000):
-	x = numpy.reshape(pattern,(1,len(pattern),1))
-	x = x/float(n_vocab)
-	prediction = model.predict(x, verbose=0)
-	index = numpy.argmax(prediction)
-	result = int_to_char[index]
-	seq_in = [int_to_char[value] for value in pattern]
-	sys.stdout.write(result)
-	pattern.append(index)
-	pattern = pattern[1:len(pattern)]
-
-print "\nDone."
+model.fit(X,y, nb_epoch=50, batch_size=64, callbacks=callbacks_list)
