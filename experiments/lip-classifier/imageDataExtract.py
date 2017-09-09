@@ -80,7 +80,9 @@ def load_data():
 	labelnum = 0
 	i = 0
 
-	print root_path
+		
+
+	j = 0
 
 	for folders in root:
 		print '-',folders
@@ -96,20 +98,24 @@ def load_data():
 		
 		iter_counter = 0
 
-		j = 0
 
 
 		for subFolders in os.listdir(root_path + folders):
 		
 
 			subFolders = subFolders + slash
+			
+			pathStr = root_path + folders + subFolders 
+
+
+			main_ar = None
+			i = 0
 
 			for files in os.listdir(root_path + folders + subFolders):
 				print root_path, folders, subFolders, files		
 		
 				imgO = Image.open(root_path + folders + subFolders + files)
 
-				pathStr = root_path + folders + files
 
 				img = np.array(imgO).transpose()
 		
@@ -118,13 +124,9 @@ def load_data():
 				if i == 0:
 					# This is our first time with the image, so we initalize our main array
 					main_ar = np.array([img])
-					label = np.array([labelnum])
-					labelPath = np.array([pathStr])
 				else:
 					# We will just concatenate the array then
 					main_ar = np.concatenate(([img], main_ar))
-					label = np.concatenate((label, [labelnum]))
-					labelPath = np.concatenate((labelPath, [pathStr]))
 
 				# Adding our label array
 				i = i + 1
@@ -140,9 +142,18 @@ def load_data():
 					break  
 
 
+			if j == 0:
+				real_main_ar = np.array([main_ar])
+				label = np.array([labelnum])
+				labelPath = np.array([pathStr])
+			else:
+				real_main_ar = np.concatenate(([main_ar], real_main_ar)) 
+				label = np.concatenate((label, [labelnum]))
+				labelPath = np.concatenate((labelPath, [pathStr]))
 
 
 
+			j = j + 1
 
 
 
@@ -151,15 +162,15 @@ def load_data():
 
 	# We have our main array and label array
 
-	print 'main_ar: ', main_ar.shape
+	print 'real_main_ar: ', real_main_ar.shape
 	print 'label: ', label.shape
 
 	print 'Saving numpy arrays'
 	# We are going to save our matrix and label array
-	np.save('../../numpy-matrix/main.npy', main_ar)
-	np.save('../../numpy-matrix/label.npy', label)
-	np.save('../../numpy-matrix/labelName.npy', labelName)
-	np.save('../../numpy-matrix/labelPath.npy', labelPath)
+	np.save('./numpy-matrix/main.npy', real_main_ar)
+	np.save('./numpy-matrix/label.npy', label)
+	np.save('./numpy-matrix/labelName.npy', labelName)
+	np.save('./numpy-matrix/labelPath.npy', labelPath)
 	
 	print 'Successfully saved numpy arrays!'
 
@@ -172,49 +183,118 @@ def load_data():
 
 
 def load_data_no_cross():
-	root_path = '../dataset/'
+	MAX_ITERATION = 50000
+
+	root_path = './dataset/'
 	slash = '/'
 	root = os.listdir(root_path)
 
-	print 'Iterating through folders'
+	print 'Iterating through folders from ', root_path
 
 	# Iterating through the item directories
 
 	labelnum = 0
 	i = 0
+
+	print root_path
+		
+
+	j = 0
+
 	for folders in root:
 		print '-',folders
 
 
+		if labelnum == 0:
+			labelName = np.array(([folders]))
+		else:
+			labelName = np.concatenate((labelName, [folders]))
+
+
 		folders = folders + slash
 		
-		j = 0
-		for files in os.listdir(root_path + folders):
-			imgO = Image.open(root_path + folders + files)
-			img = np.array(imgO).transpose()
-		
-		
-			if i == 0:
-				# This is our first time with the image, so we initalize our main array
-				main_ar = np.array([img])
-				label = np.array([labelnum])
-			else:
-				# We will just concatenate the array then
-				main_ar = np.concatenate(([img], main_ar))
-				label = np.concatenate((label, [labelnum]))
+		iter_counter = 0
 
-			# Adding our label array
-			i = i + 1
+
+
+		for subFolders in os.listdir(root_path + folders):
+		
+
+			subFolders = subFolders + slash
+			
+			pathStr = root_path + folders + subFolders 
+
+
+			main_ar = None
+			i = 0
+
+			for files in os.listdir(root_path + folders + subFolders):
+				print root_path, folders, subFolders, files		
+		
+				imgO = Image.open(root_path + folders + subFolders + files)
+
+
+				img = np.array(imgO).transpose()
+		
+				print img.shape
+	
+				if i == 0:
+					# This is our first time with the image, so we initalize our main array
+					main_ar = np.array([img])
+				else:
+					# We will just concatenate the array then
+					main_ar = np.concatenate(([img], main_ar))
+
+				# Adding our label array
+				i = i + 1
+
+				iter_counter = iter_counter + 1
+
+				if iter_counter%1000 == 0:
+					print '  At ', iter_counter,' with matrix: ', main_ar.shape
+
+				
+				if iter_counter >= MAX_ITERATION:
+					print '	 Max iterations of ', MAX_ITERATION, ' reached for ', folders 
+					break  
+
+
+			if j == 0:
+				real_main_ar = np.array([main_ar])
+				label = np.array([labelnum])
+				labelPath = np.array([pathStr])
+			else:
+
+				print 'Main: ', main_ar.shape
+				print 'Real: ', real_main_ar.shape
+
+				real_main_ar = np.concatenate(([main_ar], real_main_ar)) 
+				label = np.concatenate((label, [labelnum]))
+				labelPath = np.concatenate((labelPath, [pathStr]))
+
+
+
+			j = j + 1
+
+
+
 		labelnum = labelnum + 1
 
 
 	# We have our main array and label array
-	print 'Saving numpy arrays'
 
+	print 'main_ar: ', real_main_ar.shape
+	print 'label: ', label.shape
+
+	print 'Saving numpy arrays'
 	# We are going to save our matrix and label array
-	np.save('../numpy-matrix/main.npy', main_ar)
-	np.save('../numpy-matrix/label.npy', label)
+	np.save('./numpy-matrix/main.npy', real_main_ar)
+	np.save('./numpy-matrix/label.npy', label)
+	np.save('./numpy-matrix/labelName.npy', labelName)
+	np.save('./numpy-matrix/labelPath.npy', labelPath)
 	
 	print 'Successfully saved numpy arrays!'
 
-	return main_ar, label
+	return real_main_ar, label
+
+
