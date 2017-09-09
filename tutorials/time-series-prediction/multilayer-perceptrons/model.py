@@ -4,6 +4,8 @@ import pandas
 from keras.models import Sequential
 from keras.layers import Dense
 
+look_back=10
+
 def create_dataset(dataset, look_back=1):
 	dataX, dataY = [],[]
 	for i in range(len(dataset)-look_back-1):
@@ -35,7 +37,6 @@ train, test = dataset[0:train_size,:], dataset[train_size:len(dataset),:]
 print(len(train), len(test))
 
 # reshape into X=t and Y=t+1
-look_back=1
 trainX, trainY = create_dataset(train,look_back)
 testX, testY = create_dataset(test, look_back)
 

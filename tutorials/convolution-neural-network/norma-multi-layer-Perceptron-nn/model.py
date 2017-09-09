@@ -17,9 +17,13 @@ num_pixels = X_train.shape[1] * X_train.shape[2]
 X_train = X_train.reshape(X_train.shape[0], num_pixels).astype('float32')
 X_test = X_test.reshape(X_test.shape[0], num_pixels).astype('float32')
 
+print X_test.shape
+
 # normalize inputs from 0-255 to 0-1
 X_train = X_train / 255
 X_test = X_test / 255
+
+print X_train.shape
 
 # one hot encode outputs
 y_train = np_utils.to_categorical(y_train)
@@ -45,5 +49,19 @@ model.fit(X_train, y_train, validation_data=(X_test, y_test), nb_epoch=10, batch
 # Final evaluation of the model
 scores = model.evaluate(X_test, y_test, verbose=0)
 print("Baseline Error %.2f%%" % (100-scores[1]*100))
+
+# Saving the model
+
+model_json = model.to_json()
+
+# serialize the model to JSON
+model_json = model.to_json()
+with open("model.json","w") as json_file:
+        json_file.write(model_json)
+
+# serialize weights to HDF5
+model.save_weights("model.h5")
+print ''
+print "Saved model to disk"
 
 

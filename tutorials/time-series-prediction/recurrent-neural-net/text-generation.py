@@ -9,7 +9,8 @@ from keras.callbacks import ModelCheckpoint
 from keras.utils import np_utils
 
 # load ascii text and convert to lowercase
-filename = "../data/wonderland.txt"
+#filename = "../data/wonderland.txt"
+filename = "../data/data.txt"
 raw_text = open(filename).read()
 raw_text = raw_text.lower()
 
